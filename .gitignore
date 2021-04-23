@@ -1,2 +1,3 @@
 # Ignore raw data in csv format
 *.csv
+__pycache__

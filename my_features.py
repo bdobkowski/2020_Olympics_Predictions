@@ -9,13 +9,13 @@ Created on Thu Apr 22 16:27:26 2021
 desired_indicators = ['NY.GDP.MKTP.KD.ZG',\
                           'NY.GDP.PCAP.KD',\
                               'NY.GDP.MKTP.KD',\
-                              'NY.GDP.MKTP.KD',\
-                          'SP.POP.TOTL',\
-                              'SP.POP.TOTL']
+                                  'NY.GDP.MKTP.KD',\
+                                      'SP.POP.TOTL',\
+                                          'SP.POP.TOTL']
         
 field_names = ['GDP_Growth',\
-                   'GDP Per Capita',\
-                       'GDP',\
+               'GDP Per Capita',\
+               'GDP',\
                        'GDP_Normalized',\
                        'Pop',\
                     'Pop_Normalized']
