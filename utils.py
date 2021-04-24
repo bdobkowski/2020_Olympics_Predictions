@@ -24,6 +24,11 @@ def plot(x, y, ttl=None, save_path=None, correction=1.0):
     # Add labels and save to disk
     plt.xlabel('x1')
     plt.ylabel('y')
+    
+    
+    # Examining different fits
+
+    
     if ttl:
         plt.title(ttl)
     else:

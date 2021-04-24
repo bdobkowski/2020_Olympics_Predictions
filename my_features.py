@@ -22,3 +22,5 @@ field_names = ['GDP_Growth',\
     
 year_begin = 1988
 year_end = 2016
+
+validation_year = 2016

@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
 import seaborn as sns
+import math
 
 def clean_oly_data(data, wdi, world, indicators, field_names):
     data = data[data.Season == 'Summer']
@@ -17,11 +18,11 @@ def clean_oly_data(data, wdi, world, indicators, field_names):
     
     my_cols = ['Nation','Year'] + \
         field_names + \
-            ['Athletes','Athletes_Normalized','Medals','Medals_Normalized']
+            ['Athletes','Athletes_Normalized',\
+             'Medals_Last_Games',\
+                 'Medals_Last_Games_Normalized',\
+                     'Medals','Medals_Normalized']
         
-    # Removing multiple medals for each team sport
-    data = remove_duplicate_medals(data)
-    
     # Replacing medal types with medal T/F
     data.Medal.replace('Gold',True, inplace=True)
     data.Medal.replace('Silver',True, inplace=True)
@@ -33,6 +34,9 @@ def clean_oly_data(data, wdi, world, indicators, field_names):
     for region in data.region.unique(): # TODO
         # print(region)
         naming_discrepancy = True
+        if not type(region)==str:
+            if math.isnan(region):
+                continue
         for year in data.Year.unique():
             # print(year)
             subset_world = data.loc[(data.Year==year)]
@@ -71,16 +75,30 @@ def clean_oly_data(data, wdi, world, indicators, field_names):
                 if not np.sum(np.isnan(indicators_list)) == len(indicators_list):
                     naming_discrepancy = False
                     
-            newdf = newdf.append(pd.DataFrame([[region, year] + indicators_list + [total_athletes, total_athletes_norm, total_medals, total_medals_norm]], columns=my_cols))
+            newdf = newdf.append(pd.DataFrame([[region, year] + indicators_list + [total_athletes, total_athletes_norm, np.nan, np.nan, total_medals, total_medals_norm]], columns=my_cols))
         
         if naming_discrepancy:
             print(region)
-            
+    
+    unique_years = np.sort(data.Year.unique())
+    
+    for i in range(1,len(unique_years)):
+        this_year = unique_years[i]
+        last_year = unique_years[i-1]
+        for nation in newdf[newdf.Year==this_year].Nation.unique():
+            df_last = newdf.loc[(newdf.Year==last_year) & (newdf.Nation==nation)]
+            medals_last_year = df_last.Medals.values
+            medals_last_year_norm = df_last.Medals_Normalized.values
+            if not len(medals_last_year) == 1:
+                raise Exception('Problem with number last year medals')
+            newdf.loc[(newdf.Year==this_year) & (newdf.Nation==nation),'Medals_Last_Games'] = medals_last_year[0]
+            newdf.loc[(newdf.Year==this_year) & (newdf.Nation==nation),'Medals_Last_Games_Normalized'] = medals_last_year_norm[0]
+
     return newdf
 
 def remove_duplicate_medals(data):    
     tempdf = pd.DataFrame(columns=data.columns)
-    for year in data.Year.unique(): # TODO
+    for year in data.Year.unique():
         print(year)
         for event in data[data.Year==year].Event.unique():
             for medal in ['Gold','Silver','Bronze']:
@@ -88,7 +106,9 @@ def remove_duplicate_medals(data):
                 if (not subset.empty) and len(subset) > 1 and len(subset.Team.unique()) == 1:
                     tempdf = tempdf.append(subset.iloc[1:])
         
-    return data.drop(tempdf.index)
+    return_df = data.drop(tempdf.index)
+    return_df.to_csv('./RawData/data_no_duplicate.csv')
+
 
 def correct_names(wdi):
     wdi['Country Name'].replace('United States','USA', inplace=True)
@@ -126,9 +146,12 @@ def correct_names(wdi):
     return wdi
 
 def main(year_begin, year_end, desired_indicators, field_names):
-    data = pd.read_csv('./RawData/athlete_events.csv')
+    data    = pd.read_csv('./RawData/data_no_duplicate.csv')
     regions = pd.read_csv('./RawData/noc_regions.csv')
-    wdi = pd.read_csv('./RawData/WDIData.csv')
+    wdi     = pd.read_csv('./RawData/WDIData.csv')
+    
+    # This variable is included to calculate medals in prev games
+    year_begin = year_begin - 4
     
     data = data[data.Year >= year_begin]
     data = data[data.Year <= year_end]
@@ -164,6 +187,25 @@ def main(year_begin, year_end, desired_indicators, field_names):
     cleandf.to_csv('./RawData/cleaned_data.csv')
     return cleandf
 
+def train_test_split(data, validation_year, normalized=False):
+    training_data = data[data.Year!=validation_year]
+    valid_data = data[data.Year==validation_year]
+    
+    if normalized:
+        y = 'Medals_Normalized'
+    else:
+        y = 'Medals'
+        
+    cols_to_drop = ['Unnamed: 0','Nation','Year','Medals','Medals_Normalized']
+    
+    x_train = training_data.drop(columns=cols_to_drop)
+    y_train = training_data[y]
+    
+    x_valid = valid_data.drop(columns=cols_to_drop)
+    y_valid = valid_data[y]
+    
+    return x_train, y_train, x_valid, y_valid
+
 if __name__ == '__main__':
     desired_indicators = ['NY.GDP.MKTP.KD.ZG',\
                           'NY.GDP.PCAP.KD',\
@@ -176,6 +218,6 @@ if __name__ == '__main__':
                     'Pop_Normalized']
         
     year_begin = 1988
-    year_end = 2016
-    main(year_begin, year_end, desired_indicators, field_names)
+    year_end   = 2016
+    data = main(year_begin, year_end, desired_indicators, field_names)
     
