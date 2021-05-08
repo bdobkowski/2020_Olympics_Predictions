@@ -7,7 +7,6 @@ Created on Tue Apr 20 16:59:49 2021
 """
 import pandas as pd
 import numpy as np
-from matplotlib import pyplot as plt
 import seaborn as sns
 import math
 
@@ -27,7 +26,6 @@ def clean_oly_data(data, wdi, world, indicators, field_names):
     data.Medal.replace('Gold',True, inplace=True)
     data.Medal.replace('Silver',True, inplace=True)
     data.Medal.replace('Bronze',True, inplace=True)
-    
     
     # Summing medals for each country and creating new DF
     newdf = pd.DataFrame(columns=my_cols)    
@@ -174,7 +172,9 @@ def main(year_begin, year_end, desired_indicators, field_names):
     cleandf = clean_oly_data(merged, wdi, world, desired_indicators, field_names)
     
     # Getting rid of examples with NaN values
-    sns.heatmap(cleandf.isnull())
+    heatmap = sns.heatmap(cleandf.isnull())
+    heatmap.set(yticks=[])
+    heatmap.get_figure().savefig('./Plots/heatmap.ps', bbox_inches='tight')
     cleandf = cleandf.dropna(axis=0)
     sns.heatmap(cleandf.isnull())
     
@@ -196,7 +196,7 @@ def train_test_split(data, validation_year, normalized=False):
     else:
         y = 'Medals'
         
-    cols_to_drop = ['Unnamed: 0','Nation','Year','Medals','Medals_Normalized']
+    cols_to_drop = ['Nation','Year','Medals','Medals_Normalized']
     
     x_train = training_data.drop(columns=cols_to_drop)
     y_train = training_data[y]

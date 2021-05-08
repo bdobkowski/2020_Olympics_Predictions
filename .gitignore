@@ -1,3 +1,4 @@
 # Ignore raw data in csv format
 *.csv
 __pycache__
+Plots

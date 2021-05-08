@@ -8,7 +8,7 @@ Created on Thu Apr 22 16:31:52 2021
 import numpy as np
 from matplotlib import pyplot as plt
 
-def plot(x, y, ttl=None, save_path=None, correction=1.0):
+def plot(x, y, ttl=None, save_path=None, correction=1.0, line=False):
     """Plot dataset and fitted logistic regression parameters.
 
     Args:
@@ -24,6 +24,11 @@ def plot(x, y, ttl=None, save_path=None, correction=1.0):
     # Add labels and save to disk
     plt.xlabel('x1')
     plt.ylabel('y')
+    
+    if line:
+        xx = np.arange(0, max(y),0.1)
+        yy = xx
+        plt.plot(xx,yy,'r')
     
     
     # Examining different fits
