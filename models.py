@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Apr 22 15:54:33 2021
+Created on Sun May 16 17:03:39 2021
 
 @author: bdobkowski
 """
@@ -20,55 +20,6 @@ import statsmodels.api as sm
 from patsy import dmatrices
 from patsy import dmatrix
 
-
-sq_loss = lambda true_data, predict_data : 1/len(true_data) * np.sum((true_data - predict_data)**2)
-
-clean                   = False
-remove_duplicate_medals = False
-save_normalized         = True
-raw_data                = pd.read_csv('./RawData/athlete_events.csv')
-
-# Removing multiple medals for each team sport
-if remove_duplicate_medals:
-    clean_data.remove_duplicate_medals(raw_data)
-
-if not clean:
-    data = pd.read_csv('./RawData/cleaned_data.csv')
-else:
-    data = clean_data.main(year_begin, year_end, desired_indicators, field_names)
-    
-data.GDP = data.GDP/1000000000000
-data.Pop = data.Pop/1000000000
-data.Area = data.Area/1000000
-data.GDP_Per_Capita = data.GDP_Per_Capita/1000
-# data.Athletes[data.Athletes!=0] = np.log(data.Athletes[data.Athletes!=0])
-# data.Athletes_Normalized[data.Athletes_Normalized!=0] = np.log(data.Athletes_Normalized[data.Athletes_Normalized!=0])
-
-# TODO figure this out
-if 'Unnamed: 0' in data.columns: data = data.drop(columns=['Unnamed: 0'])
-
-if save_normalized:
-    data.to_csv('./RawData/cleaned_data_units.csv', index=False)
-
-x_train, y_train, x_valid, y_valid = clean_data.train_test_split(data, year_end)
-
-xt = x_train.to_numpy()
-yt = y_train.to_numpy()
-xv = x_valid.to_numpy()
-yv = y_valid.to_numpy()
-
-utils.plot_hist(data, 'Medals', save_path='./Plots/hist.ps')
-
-for feature in data.drop(columns=['Nation','Year','Medals','Medals_Normalized']).columns:
-    utils.plot(data[feature], data['Medals'],
-               save_path='./Plots/'+feature+'.ps')
-    
-for nation in data.Nation.unique():
-    x = data[data.Nation==nation].Year
-    y = data[data.Nation==nation].Medals
-    if np.sum(y) > 400:
-        utils.plot(x, y, nation, save_path='./Plots/'+nation+'.pdf')
-        
 linear_model = LR(fit_intercept=True)
 linear_model.fit(xt, yt)
 y_predict = linear_model.predict(xv)
@@ -134,9 +85,9 @@ logit_res.predict(xv)
 # zip_training_results = sm.ZeroInflatedPoisson(endog=y_train, exog=x_train, exog_infl=x_train, inflation='logit').fit()
 
 # print(zip_training_results.summary())
-ridge_model = Ridge(fit_intercept=True)
-ridge_model.fit(xt, yt)
-y_predict = ridge_model.predict(xv)
+# ridge_model = Ridge(fit_intercept=True)
+# ridge_model.fit(xt, yt)
+# y_predict = ridge_model.predict(xv)
 
 # utils.plot(y_valid, y_predict, 'Ridge Model Predictions', line=True)
 

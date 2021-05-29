@@ -105,7 +105,7 @@ def remove_duplicate_medals(data):
                     tempdf = tempdf.append(subset.iloc[1:])
         
     return_df = data.drop(tempdf.index)
-    return_df.to_csv('./RawData/data_no_duplicate.csv')
+    return_df.to_csv('./RawData/data_no_duplicate.csv',index=False)
 
 
 def correct_names(wdi):
@@ -184,11 +184,11 @@ def main(year_begin, year_end, desired_indicators, field_names):
     # print(np.sum(usa.Medals))
     # print(np.sum(italy.Medals))
     
-    cleandf.to_csv('./RawData/cleaned_data.csv')
+    cleandf.to_csv('./RawData/cleaned_data.csv', index=False)
     return cleandf
 
 def train_test_split(data, validation_year, normalized=False):
-    training_data = data[data.Year!=validation_year]
+    training_data = data[data.Year<validation_year]
     valid_data = data[data.Year==validation_year]
     
     if normalized:
@@ -205,6 +205,22 @@ def train_test_split(data, validation_year, normalized=False):
     y_valid = valid_data[y]
     
     return x_train, y_train, x_valid, y_valid
+
+def to_numpy(x_train, y_train, x_valid, y_valid):
+    xt = x_train.to_numpy()
+    yt = y_train.to_numpy()
+    xv = x_valid.to_numpy()
+    yv = y_valid.to_numpy()
+    
+    return xt, yt, xv, yv
+
+def to_clf_data(yt, yv):
+    yt_bool = np.zeros(len(yt))
+    yt_bool[yt!=0] = 1
+    yv_bool = np.zeros(len(yv))
+    yv_bool[yv!=0] = 1
+    
+    return yt_bool, yv_bool
 
 if __name__ == '__main__':
     desired_indicators = ['NY.GDP.MKTP.KD.ZG',\
