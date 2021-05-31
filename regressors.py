@@ -5,23 +5,17 @@ Created on Sun May 16 17:03:39 2021
 
 @author: bdobkowski
 """
-import pandas as pd
 import numpy as np
-import clean_data
-from my_features import year_begin, year_end, desired_indicators, field_names
-from matplotlib import pyplot as plt
-import utils
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import Ridge
-from sklearn.linear_model import Lasso
+from sklearn.linear_model import RidgeCV
+from sklearn.linear_model import LassoCV
 from sklearn.linear_model import Lasso
 from sklearn.linear_model import PoissonRegressor
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import RandomizedSearchCV
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.svm import SVR
-from sklearn.neural_network import MLPRegressor as NN
-import statsmodels.api as sm
-from patsy import dmatrices
-from patsy import dmatrix
 
 class Regressor:
     """Regressor
@@ -48,11 +42,14 @@ class Regressor:
                          degree=3,
                          gamma='scale',
                          epsilon=0.1,
-                         C=1.0)
+                         C=1.0,
+                         max_iter=1000)
         elif model_type == 'Poisson':
-            self.model = PoissonRegressor(max_iter=1000)
+            self.model = PoissonRegressor(max_iter=10000)
         elif model_type == 'RandomForest':
             self.model = RandomForestRegressor(max_depth=2, random_state=0)
+        elif model_type == 'Baseline':
+            self.model = LinearRegression(fit_intercept=True)
         else:
             raise Exception('Model does not exist in regressor class')
 
@@ -63,17 +60,7 @@ class Regressor:
             x: Training example inputs. Shape (n_examples, dim).
             y: Training example labels. Shape (n_examples,).
         """
-        if self.model_type == 'LinearReg':
-            w = np.exp(-(y-50)**2/1000)
-            self.model.fit(x, y, sample_weight=w)
-        # elif self.model_type == 'Ridge':
-        #     w = np.exp(-(y-50)**2/500)
-        #     self.model.fit(x, y, sample_weight=w)
-        # elif self.model_type == 'Lasso':
-        #     w = np.exp(-(y-50)**2/1000)
-        #     self.model.fit(x, y, sample_weight=w)
-        else:
-            self.model.fit(x, y)
+        self.model.fit(x, y)
         
     def predict(self, x):
         """Run sklearn implementation of regression algorithm
@@ -83,3 +70,65 @@ class Regressor:
             y: Training example labels. Shape (n_examples,).
         """
         return self.model.predict(x)
+    
+    def fit_cv(self, x, y):
+        """ Grid Search Cross Validation
+        """
+        if self.model_type == 'LinearReg':
+            w = np.exp(-(y-50)**2/1000)
+            self.model_cv = self.model
+            self.model_cv.fit(x, y, sample_weight=w)
+            return
+        
+        elif self.model_type == 'Baseline':
+            self.model_cv = self.model
+            self.model_cv.fit(x, y)
+            return
+        
+        elif self.model_type == 'Ridge':
+            self.model_cv = RidgeCV(alphas=(np.linspace(0.1,10.0,num=30)),
+                                    fit_intercept=True).fit(x, y)
+            return
+        
+        elif self.model_type == 'Lasso':
+            self.model_cv = LassoCV(alphas=(np.linspace(0.1,10.0,num=30)),
+                                    fit_intercept=True).fit(x, y)
+            return
+        
+        elif self.model_type == 'SVR':
+            params = {'kernel':['poly','rbf'],
+                      'C':np.logspace(-2,2,num=40),
+                      'gamma':['scale'],
+                      'max_iter':[-1],
+                      'degree':[1,2,3,4]}
+            
+            self.model_cv = GridSearchCV(estimator=self.model, 
+                                     param_grid=params, 
+                                     scoring='neg_mean_squared_error').fit(x,y)
+            return
+            
+        elif self.model_type == 'Poisson':
+            params = {'alpha':np.linspace(0.1,10,30)}
+            
+            self.model_cv = GridSearchCV(estimator=self.model, 
+                                     param_grid=params, 
+                                     scoring='neg_mean_squared_error').fit(x,y)
+            return
+            
+        elif self.model_type == 'RandomForest':
+            params = {'bootstrap': [True, False],
+                      'max_depth': [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, None],
+                      'max_features': ['auto', 'sqrt'],
+                      'min_samples_leaf': [1, 2, 4],
+                      'min_samples_split': [2, 5, 10],
+                      'n_estimators': [200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000]}
+            
+            self.model_cv = RandomizedSearchCV(estimator = self.model, 
+                                               param_distributions = params, 
+                                               n_iter = 200, 
+                                               cv = 3, 
+                                               verbose=1, 
+                                               random_state=42, 
+                                               n_jobs = -1).fit(x,y)
+            return
+        

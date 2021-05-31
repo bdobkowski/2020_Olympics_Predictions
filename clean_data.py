@@ -19,8 +19,8 @@ def clean_oly_data(data, wdi, world, indicators, field_names):
         field_names + \
             ['Athletes','Athletes_Normalized',\
              'Medals_Last_Games',\
-                 'Medals_Last_Games_Normalized',\
-                     'Medals','Medals_Normalized']
+                     'Total_Medals_Year',\
+                     'Medals']
         
     # Replacing medal types with medal T/F
     data.Medal.replace('Gold',True, inplace=True)
@@ -45,7 +45,7 @@ def clean_oly_data(data, wdi, world, indicators, field_names):
             total_medals = np.sum(subset.Medal)
             total_athletes = len(subset['Name'].unique())
             
-            total_medals_norm = total_medals / total_medals_year
+            # total_medals_norm = total_medals / total_medals_year
             total_athletes_norm = total_athletes / total_athletes_year
             
             indicators_list = []
@@ -73,7 +73,7 @@ def clean_oly_data(data, wdi, world, indicators, field_names):
                 if not np.sum(np.isnan(indicators_list)) == len(indicators_list):
                     naming_discrepancy = False
                     
-            newdf = newdf.append(pd.DataFrame([[region, year] + indicators_list + [total_athletes, total_athletes_norm, np.nan, np.nan, total_medals, total_medals_norm]], columns=my_cols))
+            newdf = newdf.append(pd.DataFrame([[region, year] + indicators_list + [total_athletes, total_athletes_norm, np.nan, total_medals_year, total_medals]], columns=my_cols))
         
         if naming_discrepancy:
             print(region)
@@ -86,11 +86,9 @@ def clean_oly_data(data, wdi, world, indicators, field_names):
         for nation in newdf[newdf.Year==this_year].Nation.unique():
             df_last = newdf.loc[(newdf.Year==last_year) & (newdf.Nation==nation)]
             medals_last_year = df_last.Medals.values
-            medals_last_year_norm = df_last.Medals_Normalized.values
             if not len(medals_last_year) == 1:
                 raise Exception('Problem with number last year medals')
             newdf.loc[(newdf.Year==this_year) & (newdf.Nation==nation),'Medals_Last_Games'] = medals_last_year[0]
-            newdf.loc[(newdf.Year==this_year) & (newdf.Nation==nation),'Medals_Last_Games_Normalized'] = medals_last_year_norm[0]
 
     return newdf
 
@@ -191,18 +189,11 @@ def train_test_split(data, validation_year, normalized=False):
     training_data = data[data.Year<validation_year]
     valid_data = data[data.Year==validation_year]
     
-    if normalized:
-        y = 'Medals_Normalized'
-    else:
-        y = 'Medals'
-        
-    cols_to_drop = ['Nation','Year','Medals','Medals_Normalized']
+    x_train = training_data.drop(columns=['Nation','Medals'])
+    y_train = training_data['Medals']
     
-    x_train = training_data.drop(columns=cols_to_drop)
-    y_train = training_data[y]
-    
-    x_valid = valid_data.drop(columns=cols_to_drop)
-    y_valid = valid_data[y]
+    x_valid = valid_data.drop(columns=['Nation','Medals'])
+    y_valid = valid_data['Medals']
     
     return x_train, y_train, x_valid, y_valid
 
