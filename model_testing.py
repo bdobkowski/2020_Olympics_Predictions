@@ -25,6 +25,8 @@ run_tuning     = True
 classifier_list = ['Baseline','Logistic_Reg','SVC','GaussianNB','RandomForest','MLP','AdaBoost']
 regressor_list = ['Baseline','LinearReg','Ridge','Lasso','SVR','Poisson','RandomForest']
 classifier_list = ['Baseline','SVC']
+regressor_list = ['Baseline','Ridge']
+
 
 def train_classifiers(x_t,y_t,x_v,y_v, run_cv=False):
     
@@ -162,7 +164,7 @@ def score_reg_model(y_predict, reg_type):
         yp_print[i] = y_predict[i]
         i += 1
     my_df = pd.DataFrame(data={'Nation':nations,'Actual_Medals':yv_print,'Predicted_Medals':yp_print})
-    print(my_df.sort_values(by=['Actual_Medals'],ascending=False).head(15))
+    # print(my_df.sort_values(by=['Actual_Medals'],ascending=False).head(15))
     tops_sorted = my_df.sort_values(by=['Actual_Medals'],ascending=False)[0:10]
     print('\n' + reg_type + ' Avg Std Loss:        ' + str(avg_std_loss(yv, yp_print)))
     print('\n' + reg_type + ' Avg Std Loss Top 10: ' + str(avg_std_loss(tops_sorted['Actual_Medals'], tops_sorted['Predicted_Medals'])))
@@ -202,13 +204,14 @@ if __name__ == '__main__':
                                                       run_cv=run_tuning)
     else:
     
-        clf_predictions, clf_performance, clf_tuned = train_classifiers(xt, yt_clf, xv, yv_clf, 
-                                                            run_cv=run_tuning)
+        clf_predictions, clf_performance, clf_tuned = train_classifiers(xt, yt_clf, 
+                                                                        xv, yv_clf, 
+                                                                        run_cv=run_tuning)
         
         best_classifier = dict_argmax(clf_performance)
-        print(clf_tuned['SVC'].best_estimator_)
+        # print(clf_tuned['SVC'].best_estimator_)
         
-        import pdb;pdb.set_trace()
+        # import pdb;pdb.set_trace()
         
         reg_performance, reg_tuned = train_regressors(xt, yt, xv, yv, 
                                             clf_predict=clf_predictions[best_classifier],
@@ -246,3 +249,13 @@ if __name__ == '__main__':
                           clf=best_clf,
                           reg=best_reg,
                           classify=True)
+        
+        try:
+            print(reg_tuned[best_regressor].best_estimator_.get_params())
+        except:
+            print(reg_tuned[best_regressor].get_params())
+        try:
+            print(clf_tuned[best_classifier].best_estimator_.get_params())
+        except:
+            print(clf_tuned[best_classifier].get_params())
+        

@@ -12,6 +12,7 @@ from sklearn.linear_model import RidgeCV
 from sklearn.linear_model import LassoCV
 from sklearn.linear_model import Lasso
 from sklearn.linear_model import PoissonRegressor
+from sklearn.kernel_ridge import KernelRidge
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.ensemble import RandomForestRegressor
@@ -86,8 +87,17 @@ class Regressor:
             return
         
         elif self.model_type == 'Ridge':
-            self.model_cv = RidgeCV(alphas=(np.linspace(0.1,10.0,num=30)),
-                                    fit_intercept=True).fit(x, y)
+            # self.model_cv = RidgeCV(alphas=(np.linspace(0.1,10.0,num=30)),
+            #                         fit_intercept=True).fit(x, y)
+            
+            params = {'kernel':['additive_chi1', 'chi2', 'linear', 'poly', 'polynomial', 'rbf', 'laplacian', 'sigmoid', 'cosine'],
+                      'alpha':[0.1, 1.0, 10.0, 100.0],
+                      'gamma':[0.1, 0.01, 0.4, 0.7],
+                      'fit_intercept':[True]}
+            
+            self.model_cv = GridSearchCV(estimator=KernelRidge(), 
+                                         param_grid=params, 
+                                         scoring='neg_mean_squared_error').fit(x,y)
             return
         
         elif self.model_type == 'Lasso':
@@ -96,7 +106,7 @@ class Regressor:
             return
         
         elif self.model_type == 'SVR':
-            params = {'kernel':['poly','rbf'],
+            params = {'kernel':['poly','rbf','linear','sigmoid'],
                       'C':np.logspace(-2,2,num=40),
                       'gamma':['scale'],
                       'max_iter':[-1],

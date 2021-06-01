@@ -80,17 +80,23 @@ class Classifier:
         
         elif self.model_type == 'SVC':
             params = {'kernel':['poly','sigmoid','rbf'],
-                      'C':np.logspace(1,-3,num=100),
-                      'gamma':['auto'] + list(np.logspace(0,-2,num=10)),
+                      'C':np.logspace(2,-2,num=3),
+                      'gamma':np.logspace(0,-2,num=3),
                       'max_iter':[-1],
                       'degree':[1,2]}
             
             self.model_cv = GridSearchCV(estimator=self.model, 
-                                     param_grid=params,
-                                     verbose=3,
-                                     cv=3,
-                                     scoring='accuracy',
-                                     n_jobs=-1).fit(x, y)
+                                      param_grid=params,
+                                      verbose=2,
+                                      cv=3,
+                                      scoring='accuracy',
+                                      n_jobs=-1).fit(x, y)
+            
+            # self.model_cv = SVC(kernel='poly',
+            #                     C=1.0,
+            #                     gamma='auto',
+            #                     max_iter=-1,
+            #                     degree=3).fit(x, y)
             
         elif self.model_type == 'MLP':
             params={'activation':['logistic','relu','tanh'],
