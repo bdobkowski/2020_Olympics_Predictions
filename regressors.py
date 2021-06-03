@@ -7,14 +7,10 @@ Created on Sun May 16 17:03:39 2021
 """
 import numpy as np
 from sklearn.linear_model import LinearRegression
-from sklearn.linear_model import Ridge
-from sklearn.linear_model import RidgeCV
-from sklearn.linear_model import LassoCV
-from sklearn.linear_model import Lasso
+from sklearn.linear_model import Ridge, RidgeCV
+from sklearn.linear_model import Lasso, LassoCV
 from sklearn.linear_model import PoissonRegressor
-from sklearn.kernel_ridge import KernelRidge
-from sklearn.model_selection import GridSearchCV
-from sklearn.model_selection import RandomizedSearchCV
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.svm import SVR
 
@@ -55,25 +51,13 @@ class Regressor:
             raise Exception('Model does not exist in regressor class')
 
     def fit(self, x, y):
-        """Run sklearn implementation of regression algorithm
-
-        Args:
-            x: Training example inputs. Shape (n_examples, dim).
-            y: Training example labels. Shape (n_examples,).
-        """
         self.model.fit(x, y)
         
     def predict(self, x):
-        """Run sklearn implementation of regression algorithm
-
-        Args:
-            x: Training example inputs. Shape (n_examples, dim).
-            y: Training example labels. Shape (n_examples,).
-        """
         return self.model.predict(x)
     
     def fit_cv(self, x, y):
-        """ Grid Search Cross Validation
+        """ Cross Validation via GridSearch, RandomizedSearch
         """
         if self.model_type == 'LinearReg':
             w = np.exp(-(y-50)**2/1000)

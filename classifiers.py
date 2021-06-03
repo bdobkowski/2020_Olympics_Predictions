@@ -6,14 +6,12 @@ Created on Fri May 28 14:36:00 2021
 @author: bdobkowski
 """
 import numpy as np
-from sklearn.linear_model import LogisticRegression
-from sklearn.linear_model import LogisticRegressionCV
+from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
 from sklearn.neural_network import MLPClassifier
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.naive_bayes import GaussianNB
-from sklearn.model_selection import GridSearchCV
-from sklearn.model_selection import RandomizedSearchCV
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 import itertools
 
 class Classifier:
@@ -29,6 +27,7 @@ class Classifier:
         """
         self.model_type = model_type
         
+        # Baseline models
         if model_type == 'Logistic_Reg':
             self.model = LogisticRegression(max_iter=10000)
         elif model_type == 'Baseline':
@@ -47,25 +46,15 @@ class Classifier:
             raise Exception('Model does not exist in classifer class')
 
     def fit(self, x, y):
-        """Run sklearn implementation of regression algorithm
-
-        Args:
-            x: Training example inputs. Shape (n_examples, dim).
-            y: Training example labels. Shape (n_examples,).
-        """
         self.model.fit(x, y)
         
     def predict(self, x):
-        """Run sklearn implementation of regression algorithm
-
-        Args:
-            x: Training example inputs. Shape (n_examples, dim).
-            y: Training example labels. Shape (n_examples,).
-        """
         return self.model.predict(x)
     
     def fit_cv(self, x, y):
-        """ Grid Search Cross Validation
+        """Cross Validation via GridSearch and Randomized Search
+        Not all parameter tunings used are shown,
+        many iterations were done using CV
         """
         if self.model_type == 'Logistic_Reg':
             self.model_cv = LogisticRegressionCV(Cs=np.logspace(5,-5, num=100),

@@ -20,15 +20,10 @@ all_data = pd.read_csv('./RawData/cleaned_data_units.csv')
 valid_year     = 2012
 test_year      = 2016
 run_classifier = True
-run_tuning     = False
+run_tuning     = True
 
 classifier_list = ['Logistic_Reg','SVC','GaussianNB','RandomForest','MLP']
 regressor_list = ['LinearReg','Ridge','Lasso','SVR','Poisson','RandomForest']
-classifier_list = ['Baseline']
-# regressor_list = ['Baseline']
-# regressor_list=['Ridge']
-# classifier_list=['GaussianNB']
-
 
 def train_classifiers(x_t,y_t,x_v,y_v, run_cv=False):
     
@@ -174,15 +169,15 @@ def score_reg_model(y_predict, reg_type):
     print('=========================================================\n')
     return np.array([avg_std_loss(yv, yp_print),avg_std_loss(tops_sorted['Actual_Medals'], tops_sorted['Predicted_Medals'])])
     
-def dict_argmin(d):
-    if not d: return None
-    min_val = min(d.values())
-    return [k for k in d if d[k] == min_val][0]
+def dict_argmin(mydict):
+    if not mydict: return None
+    min_val = min(mydict.values())
+    return [k for k in mydict if mydict[k] == min_val][0]
 
-def dict_argmax(d):
-    if not d: return None
-    max_val = max(d.values())
-    return [k for k in d if d[k] == max_val][0]
+def dict_argmax(mydict):
+    if not mydict: return None
+    max_val = max(mydict.values())
+    return [k for k in mydict if mydict[k] == max_val][0]
 
 if __name__ == '__main__':
     
@@ -195,9 +190,16 @@ if __name__ == '__main__':
     # all_data.drop('Athletes_Normalized',axis=1,inplace=True)
     # all_data.drop('Year',axis=1,inplace=True)
     
-    x_train, y_train, x_valid, y_valid = clean_data.train_test_split(all_data, valid_year, normalized=False)
+    # Split data into model tuning set (1988-2008) and validation set (2012)    
+    # For model iteration and selection
+    x_train, y_train, x_valid, y_valid = clean_data.train_test_split(all_data, 
+                                                                     valid_year, 
+                                                                     normalized=False)
     
-    xt, yt, xv, yv = clean_data.to_numpy(x_train, y_train, x_valid, y_valid)
+    xt, yt, xv, yv = clean_data.to_numpy(x_train, 
+                                         y_train, 
+                                         x_valid, 
+                                         y_valid)
 
     yt_clf, yv_clf = clean_data.to_clf_data(yt,
                                             yv)
@@ -225,9 +227,17 @@ if __name__ == '__main__':
                           
     best_regressor = dict_argmin(reg_scores)
     
-    x_train, y_train, x_test, y_test = clean_data.train_test_split(all_data, test_year, normalized=False)
     
-    xt, yt, xtest, ytest = clean_data.to_numpy(x_train, y_train, x_test, y_test)
+    # Split data into final training set (1988-2012) and test set (2016)
+    # For final predictions    
+    x_train, y_train, x_test, y_test = clean_data.train_test_split(all_data, 
+                                                                   test_year, 
+                                                                   normalized=False)
+    
+    xt, yt, xtest, ytest = clean_data.to_numpy(x_train, 
+                                               y_train, 
+                                               x_test, 
+                                               y_test)
     
     if not run_classifier:
         predict_test_set(xt, yt, xtest, ytest, 
@@ -260,5 +270,6 @@ if __name__ == '__main__':
         except:
             print(clf_tuned[best_classifier].get_params())
         
+    # For plotting final results
     # reg_perf_after = reg_performance
-    utils.plot_before_after(reg_performance, reg_perf_after)
+    #utils.plot_before_after(reg_performance, reg_perf_after)

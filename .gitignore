@@ -1,5 +1,6 @@
 # Ignore raw data in csv format
 *.csv
+*.pyc
 __pycache__
 Plots
 RawData

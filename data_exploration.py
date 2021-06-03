@@ -9,7 +9,6 @@ import pandas as pd
 import numpy as np
 import clean_data
 from my_features import year_begin, year_end, desired_indicators, field_names
-from matplotlib import pyplot as plt
 import utils
 from sklearn.linear_model import LinearRegression as LR
 
@@ -35,10 +34,7 @@ data.GDP = data.GDP/1000000000000
 data.Pop = data.Pop/1000000000
 data.Area = data.Area/1000000
 data.GDP_Per_Capita = data.GDP_Per_Capita/1000
-# data.Athletes[data.Athletes!=0] = np.log(data.Athletes[data.Athletes!=0])
-# data.Athletes_Normalized[data.Athletes_Normalized!=0] = np.log(data.Athletes_Normalized[data.Athletes_Normalized!=0])
 
-# TODO figure this out
 if 'Unnamed: 0' in data.columns: data = data.drop(columns=['Unnamed: 0'])
 
 if save_normalized:
@@ -53,6 +49,7 @@ yv = y_valid.to_numpy()
 
 utils.plot_hist(data, 'Medals', save_path='./Plots/hist.ps')
 
+# Creating plots for all features
 for feature in data.drop(columns=['Nation','Medals']).columns:
     utils.plot(data[feature], data['Medals'],
                save_path='./Plots/'+feature+'.ps')
@@ -63,6 +60,7 @@ for nation in data.Nation.unique():
     if np.sum(y) > 400:
         utils.plot(x, y, nation, save_path='./Plots/'+nation+'.pdf')
         
+# Baseline model: linear regression
 linear_model = LR(fit_intercept=True)
 linear_model.fit(xt, yt)
 y_predict = linear_model.predict(xv)
