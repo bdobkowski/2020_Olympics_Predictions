@@ -20,12 +20,14 @@ all_data = pd.read_csv('./RawData/cleaned_data_units.csv')
 valid_year     = 2012
 test_year      = 2016
 run_classifier = True
-run_tuning     = True
+run_tuning     = False
 
-classifier_list = ['Baseline','Logistic_Reg','SVC','GaussianNB','RandomForest','MLP','AdaBoost']
-regressor_list = ['Baseline','LinearReg','Ridge','Lasso','SVR','Poisson','RandomForest']
-classifier_list = ['Baseline','SVC']
-regressor_list = ['Baseline','Ridge']
+classifier_list = ['Logistic_Reg','SVC','GaussianNB','RandomForest','MLP']
+regressor_list = ['LinearReg','Ridge','Lasso','SVR','Poisson','RandomForest']
+classifier_list = ['Baseline']
+# regressor_list = ['Baseline']
+# regressor_list=['Ridge']
+# classifier_list=['GaussianNB']
 
 
 def train_classifiers(x_t,y_t,x_v,y_v, run_cv=False):
@@ -100,9 +102,9 @@ def train_regressors(x_t,y_t,x_v,y_v, clf_predict=None, run_cv=False):
             reg_tuned[reg_type] = reg.model
     
     if clf_predict is not None:
-        save_as = './Plots/RegPerformanceWithoutClassification.ps'
-    else:
         save_as = './Plots/RegPerformanceWithClassification.ps'
+    else:
+        save_as = './Plots/RegPerformanceWithoutClassification.ps'
     
     utils.plot_reg(reg_performance, save_path=save_as)
     
@@ -164,7 +166,8 @@ def score_reg_model(y_predict, reg_type):
         yp_print[i] = y_predict[i]
         i += 1
     my_df = pd.DataFrame(data={'Nation':nations,'Actual_Medals':yv_print,'Predicted_Medals':yp_print})
-    # print(my_df.sort_values(by=['Actual_Medals'],ascending=False).head(15))
+    print(my_df.sort_values(by=['Actual_Medals'],ascending=False).head(15))
+    my_df.sort_values(by=['Actual_Medals'],ascending=False).head(10).to_csv('./Plots/final_alg_predictions.csv',index=False)
     tops_sorted = my_df.sort_values(by=['Actual_Medals'],ascending=False)[0:10]
     print('\n' + reg_type + ' Avg Std Loss:        ' + str(avg_std_loss(yv, yp_print)))
     print('\n' + reg_type + ' Avg Std Loss Top 10: ' + str(avg_std_loss(tops_sorted['Actual_Medals'], tops_sorted['Predicted_Medals'])))
@@ -183,6 +186,7 @@ def dict_argmax(d):
 
 if __name__ == '__main__':
     
+    # Feature map testing
     # all_data.drop('Total_Medals_Year',axis=1,inplace=True)
     # all_data.loc[all_data.Athletes!=0, 'Athletes'] = np.log(all_data.loc[all_data.Athletes!=0, 'Athletes'])
     # all_data.loc[all_data.Athletes_Normalized!=0, 'Athletes_Normalized'] = np.log(all_data.loc[all_data.Athletes_Normalized!=0, 'Athletes_Normalized'])
@@ -209,9 +213,6 @@ if __name__ == '__main__':
                                                                         run_cv=run_tuning)
         
         best_classifier = dict_argmax(clf_performance)
-        # print(clf_tuned['SVC'].best_estimator_)
-        
-        # import pdb;pdb.set_trace()
         
         reg_performance, reg_tuned = train_regressors(xt, yt, xv, yv, 
                                             clf_predict=clf_predictions[best_classifier],
@@ -247,7 +248,7 @@ if __name__ == '__main__':
         
         predict_test_set(xt, yt, xtest, ytest, 
                           clf=best_clf,
-                          reg=best_reg,
+                          reg=reg_tuned['Ridge'],
                           classify=True)
         
         try:
@@ -259,3 +260,5 @@ if __name__ == '__main__':
         except:
             print(clf_tuned[best_classifier].get_params())
         
+    # reg_perf_after = reg_performance
+    utils.plot_before_after(reg_performance, reg_perf_after)

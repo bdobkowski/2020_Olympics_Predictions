@@ -87,38 +87,49 @@ class Regressor:
             return
         
         elif self.model_type == 'Ridge':
-            # self.model_cv = RidgeCV(alphas=(np.linspace(0.1,10.0,num=30)),
-            #                         fit_intercept=True).fit(x, y)
+            self.model_cv = RidgeCV(alphas=(np.linspace(0.1,10.0,num=30)),
+                                    fit_intercept=True).fit(x, y)
             
-            params = {'kernel':['additive_chi1', 'chi2', 'linear', 'poly', 'polynomial', 'rbf', 'laplacian', 'sigmoid', 'cosine'],
-                      'alpha':[0.1, 1.0, 10.0, 100.0],
-                      'gamma':[0.1, 0.01, 0.4, 0.7],
-                      'fit_intercept':[True]}
+            # self.model_cv = Ridge(alpha=10.0,
+            #                       fit_intercept=True).fit(x, y)
             
-            self.model_cv = GridSearchCV(estimator=KernelRidge(), 
-                                         param_grid=params, 
-                                         scoring='neg_mean_squared_error').fit(x,y)
+            # ['additive_chi1', 'chi2', 'linear', 'poly', 'polynomial', 'rbf', 'laplacian', 'sigmoid', 'cosine']
+            # params = {'kernel':['rbf','linear'],
+            #           'alpha':np.linspace(0.1,10.0,num=30),
+            #           'gamma':[0.1, 0.01, 0.4, 0.7]}
+            
+            # self.model_cv = GridSearchCV(estimator=KernelRidge(), 
+            #                              param_grid=params, 
+            #                              scoring='neg_mean_squared_error').fit(x,y)
             return
         
         elif self.model_type == 'Lasso':
-            self.model_cv = LassoCV(alphas=(np.linspace(0.1,10.0,num=30)),
+            self.model_cv = LassoCV(alphas=(np.linspace(0.01,10.0,num=100)),
                                     fit_intercept=True).fit(x, y)
             return
         
         elif self.model_type == 'SVR':
-            params = {'kernel':['poly','rbf','linear','sigmoid'],
-                      'C':np.logspace(-2,2,num=40),
-                      'gamma':['scale'],
-                      'max_iter':[-1],
-                      'degree':[1,2,3,4]}
+            # params = {'kernel':['poly','rbf','linear','sigmoid'],
+            #           'C':np.logspace(-2,2,num=40),
+            #           'gamma':['scale'],
+            #           'max_iter':[-1],
+            #           'degree':[1,2,3,4]}
             
-            self.model_cv = GridSearchCV(estimator=self.model, 
-                                     param_grid=params, 
-                                     scoring='neg_mean_squared_error').fit(x,y)
+            # self.model_cv = GridSearchCV(estimator=self.model, 
+            #                          param_grid=params, 
+            #                          scoring='neg_mean_squared_error').fit(x,y)
+            
+            self.model_cv = SVR(C=0.21544346900318834, 
+                                degree=1, 
+                                kernel='linear',
+                                cache_size=200,
+                                max_iter=-1,
+                                epsilon=0.1).fit(x, y)
             return
             
         elif self.model_type == 'Poisson':
-            params = {'alpha':np.linspace(0.1,10,30)}
+            params = {'alpha':np.linspace(0.01,10,100),
+                      'max_iter':[100000]}
             
             self.model_cv = GridSearchCV(estimator=self.model, 
                                      param_grid=params, 
@@ -129,8 +140,8 @@ class Regressor:
             params = {'bootstrap': [True, False],
                       'max_depth': [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, None],
                       'max_features': ['auto', 'sqrt'],
-                      'min_samples_leaf': [1, 2, 4],
-                      'min_samples_split': [2, 5, 10],
+                      'min_samples_leaf': [1, 2, 3, 4],
+                      'min_samples_split': [2, 4, 6, 8, 10],
                       'n_estimators': [200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000]}
             
             self.model_cv = RandomizedSearchCV(estimator = self.model, 

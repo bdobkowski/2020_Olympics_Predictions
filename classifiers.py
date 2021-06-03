@@ -79,15 +79,16 @@ class Classifier:
             self.model_cv.fit(x, y)
         
         elif self.model_type == 'SVC':
-            params = {'kernel':['poly','sigmoid','rbf'],
-                      'C':np.logspace(2,-2,num=3),
-                      'gamma':np.logspace(0,-2,num=3),
+            # kernels: poly, linear, rbf, sigmoid
+            params = {'kernel':['poly'],
+                      'C':np.logspace(0,-2,num=40),
+                      'gamma':np.logspace(0,-1.0,num=40),
                       'max_iter':[-1],
-                      'degree':[1,2]}
+                      'degree':[1]}
             
             self.model_cv = GridSearchCV(estimator=self.model, 
                                       param_grid=params,
-                                      verbose=2,
+                                      verbose=1,
                                       cv=3,
                                       scoring='accuracy',
                                       n_jobs=-1).fit(x, y)
